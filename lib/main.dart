@@ -4,7 +4,6 @@ void main() {
   runApp(const MyApp());
 }
 
-// STATIC: root of the app (MaterialApp gives theme + navigation)
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -12,62 +11,95 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'My Study Planner',
-      home: HomeScreen(), // StatelessWidget: content never changes yet
+      home: HomeScreen(),
     );
   }
 }
 
-// STATIC: the whole screen
-class HomeScreen extends StatelessWidget {
+// The screen is now STATEFUL because the data changes.
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  // ===================== LOGIC =====================
+  // Data: a list of maps with the keys subject, hours, done
+    // LOGIC: your own data (subject, hours, done)
+  final List<Map<String, dynamic>> goals = [
+    {'subject': 'Mobile Application', 'hours': 5, 'done': false},
+    {'subject': 'English', 'hours': 2, 'done': false},
+    {'subject': 'Networking N+', 'hours': 3, 'done': false},
+  ];
+
+  // LOGIC: add a sample goal (replaced by a real form in Phase 4)
+  void addSampleGoal() {
+    setState(() {
+      goals.add({'subject': 'New goal', 'hours': 2, 'done': false});
+    });
+  }
+
+  // LOGIC: flip done between true and false for one goal
+  void toggleGoal(int index) {
+    setState(() {
+    // ! flips the value: true becomes false, false becomes true
+      goals[index]['done'] = !goals[index]['done'];
+    });
+  }
+
+  // LOGIC: remove one goal
+  void deleteGoal(int index) {
+    setState(() {
+      // removeAt deletes the item at this position in the list
+      goals.removeAt(index);
+    });
+  }
+  // =================================================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // STATIC: top bar
+      // STATIC
       appBar: AppBar(title: const Text('My Study Planner')),
 
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // STATIC: heading above the list
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text(
-              'Study Goals',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-          ),
+      body: ListView.builder(
+        itemCount: goals.length, // one tile per goal in the data
+        itemBuilder: (context, index) {
+          final goal = goals[index];
+          final bool done = goal['done'];
 
-          // STATIC: goal card 1 (example)
-          const Card(
+          return Card(
             child: ListTile(
-              title: Text('Mobile Application'),
-              subtitle: Text('5 hours'),
+              // CONNECTION 1: UI calls LOGIC (toggle)
+              leading: Checkbox(
+                value: done,
+                onChanged: (_) => toggleGoal(index),
+              ),
+              title: Text(
+                goal['subject'],
+                style: TextStyle(
+                  // if done is true, draw a line through the text
+                  decoration: done
+                      ? TextDecoration.lineThrough
+                      : TextDecoration.none,
+                ),
+              ),
+              subtitle: Text('${goal['hours']} hours'),
+              // CONNECTION 2: UI calls LOGIC (delete)
+              trailing: IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () => deleteGoal(index),
+              ),
             ),
-          ),
-
-          // STATIC: goal card 2 (example)
-          const Card(
-            child: ListTile(
-              title: Text('English'),
-              subtitle: Text('2 hours'),
-            ),
-          ),
-
-          // STATIC: goal card 3 (example)
-          const Card(
-            child: ListTile(
-              title: Text('Networking N+'),
-              subtitle: Text('3 hours'),
-            ),
-          ),
-        ],
+          );
+        },
       ),
 
-      // STATIC: button that does nothing yet
+      // STATIC + CONNECTION: button calls the add function
       floatingActionButton: FloatingActionButton(
-        onPressed: () {}, // empty on purpose in Phase 1
+        onPressed: addSampleGoal,
         child: const Icon(Icons.add),
       ),
     );
